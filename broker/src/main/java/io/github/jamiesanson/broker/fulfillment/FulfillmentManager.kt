@@ -1,5 +1,6 @@
 package io.github.jamiesanson.broker.fulfillment
 
+import io.github.jamiesanson.broker.util.isContentStagnant
 import io.reactivex.Completable
 import io.reactivex.Single
 import io.reactivex.SingleSource
@@ -87,11 +88,7 @@ class FulfillmentManager(
         @Suppress("LiftReturnOrAssignment")
         if (fulfiller.existsLocal(dataInfo.key)) {
             // Check freshness of cached data.
-            // Last fetched + expiration duration should be after the current time for
-            // data to be considered fresh
-            returnValue = if (dataInfo.lastFetched
-                    .plus(dataInfo.expirationDuration)
-                    .isBefore(LocalDateTime.now())) {
+            returnValue = if (dataInfo.isContentStagnant()) {
                 updateFetched = true
                 fulfiller::getRemote
             } else {
@@ -109,10 +106,18 @@ class FulfillmentManager(
         return adaptPut(dataInfo, fulfiller::putRemote, value, updatePutTime = true)
     }
 
-    private fun <T> putPersistent(dataInfo: DataInfo, value: T, skipRemote: Boolean = false): Single<DataInfo> {
-        // If the item is to be put in persistent storage do so, but don't update the update put time.
-        // This is such that when the brokers are synced, this data point will be regarded as required
-        // to be synced.
-        return adaptPut(dataInfo, fulfiller::putLocal, value)
+    private fun <T> putPersistent(dataInfo: DataInfo, value: T): Single<DataInfo> {
+        return if (dataInfo.persistenceType == PersistenceType.PERSISTENT_LOCAL_ONLY) {
+            adaptPut(dataInfo, fulfiller::putLocal, value)
+        } else {
+            // Push the data to the remote, followed by updating the local version. The data info
+            // emitted is that of the remote push. If the push fails, the info is not updated and
+            // hence the old info without update time changes is emitted.
+            adaptPut(dataInfo, fulfiller::putRemote, value, true)
+                    .concatWith(
+                            adaptPut(dataInfo, fulfiller::putLocal, value)
+                    )
+                    .first(dataInfo)
+        }
     }
 }

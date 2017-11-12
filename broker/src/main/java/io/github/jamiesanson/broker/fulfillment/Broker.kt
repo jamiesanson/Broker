@@ -1,8 +1,11 @@
 package io.github.jamiesanson.broker.fulfillment
 
+import io.github.jamiesanson.broker.event.SyncEvent
 import io.reactivex.Completable
 import io.reactivex.Single
 import io.reactivex.schedulers.Schedulers
+import org.greenrobot.eventbus.EventBus
+import org.greenrobot.eventbus.Subscribe
 import org.joda.time.Duration
 import org.joda.time.LocalDateTime
 
@@ -15,8 +18,12 @@ class Broker<T>(
         override var lastFetched: LocalDateTime,
         override var lastUpdated: LocalDateTime,
         override val expirationDuration: Duration,
-        private val manager: FulfillmentManager
+        private  val managerProvider: Provider<FulfillmentManager>
 ): DataInfo {
+
+    init {
+        EventBus.getDefault().register(this)
+    }
 
     /**
      * Function for getting the value backing this Broker.
@@ -38,16 +45,15 @@ class Broker<T>(
      * @return Single to be subscribed to
      */
     fun get(): Single<T> {
+        val manager = managerProvider.get()
         return manager
                 .get<T>(this)
                 .map {
-                    with(it) {
-                        updateInfo(second)
-                        return@map first
-                    }
+                    val (value, dataInfo) = it
+                    updateInfo(dataInfo)
+                    return@map value
                 }
     }
-
 
     /**
      * Function to update the state of the data
@@ -70,6 +76,7 @@ class Broker<T>(
      * @return Completable to be subscribed to
      */
     fun put(value: T): Completable {
+        val manager = managerProvider.get()
         return manager.put(this, value)
                 .flatMapCompletable {
                     updateInfo(info = it)
@@ -79,7 +86,7 @@ class Broker<T>(
 
     /**
      * Invalidates this Broker such that the next call to get will
-     * bypass local persistence if it exists
+     * bypass local persistence if it exists.
      */
     fun invalidate() {
         lastFetched = lastFetched.minus(expirationDuration)
@@ -90,6 +97,24 @@ class Broker<T>(
      */
     private fun updateInfo(info: DataInfo) {
         lastFetched = info.lastFetched
+    }
+
+    /**
+     * Called by the repository to deliberately sync local
+     * content to the remote if it exists
+     */
+    @Suppress("unused")
+    @Subscribe
+    fun sync(event: SyncEvent) {
+        if (event.syncType == SyncEvent.Type.IMMEDIATE) {
+            lastUpdated
+            get()
+                .flatMapCompletable {
+                    put(it)
+                }
+                .subscribeOn(Schedulers.io())
+                .subscribe()
+        }
     }
 
     /**

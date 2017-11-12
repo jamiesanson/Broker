@@ -7,6 +7,7 @@ dependencies {
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jre8:$kotlin_version"
     implementation "joda-time:joda-time:$joda_version"
     implementation "io.reactivex.rxjava2:rxjava:$rx_version"
+    implementation "org.greenrobot:eventbus:$eventbus_version"
 }
 
 sourceCompatibility = "1.7"
