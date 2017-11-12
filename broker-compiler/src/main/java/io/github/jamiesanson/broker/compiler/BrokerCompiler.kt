@@ -7,6 +7,8 @@ import javax.lang.model.element.TypeElement
 import javax.annotation.processing.ProcessingEnvironment
 import javax.lang.model.SourceVersion
 import io.github.jamiesanson.broker.annotation.BrokerRepo
+import io.github.jamiesanson.broker.annotation.Persistent
+import io.github.jamiesanson.broker.annotation.Transient
 import javax.tools.Diagnostic
 import javax.lang.model.element.ElementKind
 import javax.annotation.processing.Filer
@@ -14,7 +16,6 @@ import javax.annotation.processing.Messager
 import javax.lang.model.util.Elements
 import javax.lang.model.util.Types
 import kotlin.collections.HashMap
-
 
 /**
  * Class responsible for compiling Broker annotated fields and
@@ -27,6 +28,12 @@ class BrokerCompiler: AbstractProcessor() {
     private lateinit var elementsUtil: Elements
     private lateinit var filer: Filer
 
+    // Supported Annotation types
+    private val ANNOTATION_TYPES = arrayListOf<Class<out Any>>(
+            BrokerRepo::class.java,
+            Transient::class.java,
+            Persistent::class.java)
+
     @Synchronized
     override fun init(processingEnv: ProcessingEnvironment) {
         super.init(processingEnv)
@@ -36,10 +43,10 @@ class BrokerCompiler: AbstractProcessor() {
         filer = processingEnv.filer
     }
 
-    override fun process(p0: MutableSet<out TypeElement>?, roundEnvironment: RoundEnvironment?): Boolean {
+    override fun process(annotations: MutableSet<out TypeElement>?, roundEnvironment: RoundEnvironment?): Boolean {
         val repoClasses: HashMap<String, String> = HashMap()
 
-        // Find all annotated classes
+        // Find all annotated repository classes
         for (element in roundEnvironment!!.getElementsAnnotatedWith(BrokerRepo::class.java)) {
             if (element.kind !== ElementKind.CLASS) {
                 messager.printMessage(Diagnostic.Kind.ERROR, "BrokerRepo can only be applied to a class.")
@@ -57,10 +64,10 @@ class BrokerCompiler: AbstractProcessor() {
     }
 
     override fun getSupportedAnnotationTypes(): Set<String> {
-        return Collections.emptySet()
+        return HashSet(ANNOTATION_TYPES.map { it.canonicalName })
     }
 
     override fun getSupportedSourceVersion(): SourceVersion {
-        return SourceVersion.RELEASE_8
+        return SourceVersion.latestSupported()
     }
 }

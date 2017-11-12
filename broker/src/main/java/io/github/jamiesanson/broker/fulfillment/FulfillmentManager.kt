@@ -1,0 +1,118 @@
+package io.github.jamiesanson.broker.fulfillment
+
+import io.reactivex.Completable
+import io.reactivex.Single
+import io.reactivex.SingleSource
+import org.joda.time.LocalDateTime
+
+/**
+ * Class for managing fulfillment. Should only be directly used through
+ * the {@link Broker} class.
+ */
+class FulfillmentManager(
+        private val fulfiller: Fulfiller
+) {
+
+    fun <T> get(info: DataInfo) : Single<Pair<T, DataInfo>> {
+        return when (info.persistenceType) {
+            PersistenceType.TRANSIENT -> getTransient(info)
+            PersistenceType.PERSISTENT -> getPersistent(info)
+            PersistenceType.PERSISTENT_LOCAL_ONLY -> getPersistent(info, skipRemote = true)
+        }
+    }
+
+    fun <T> put(info: DataInfo, value: T): Single<DataInfo> {
+        return when (info.persistenceType) {
+            PersistenceType.TRANSIENT -> putTransient(info, value)
+            PersistenceType.PERSISTENT -> putPersistent(info, value)
+            PersistenceType.PERSISTENT_LOCAL_ONLY -> putPersistent(info, value)
+        }
+    }
+
+    /**
+     * Helper function for adapting get calls
+     */
+    private fun <T> adaptGet(info: DataInfo,
+                             callable: (key: String) -> T,
+                             updateFetched: Boolean = false): Single<Pair<T, DataInfo>> {
+
+        return Single
+                .fromCallable{
+                    return@fromCallable callable(info.key)
+                }
+                .map {
+                    if (updateFetched) {
+                        info.lastFetched = LocalDateTime.now()
+                    }
+                    return@map it to info
+                }
+    }
+
+    /**
+     * Helper function for adapting put calls
+     */
+
+    private fun <T> adaptPut(info: DataInfo,
+                             callable: (String, T) -> Unit,
+                             value: T,
+                             updatePutTime: Boolean = false): Single<DataInfo> {
+        return Completable
+                .fromCallable{
+                    return@fromCallable callable(info.key, value)
+                }
+                .andThen( SingleSource {
+                    if (updatePutTime) {
+                        info.lastUpdated = LocalDateTime.now()
+                    }
+
+                    it.onSuccess(info)
+                })
+    }
+
+    private fun <T> getTransient(info: DataInfo): Single<Pair<T, DataInfo>> {
+        return adaptGet(info, fulfiller::getRemote, true)
+    }
+
+    private fun <T> getPersistent(dataInfo: DataInfo, skipRemote: Boolean = false): Single<Pair<T, DataInfo>> {
+        // If the remote is to be skipped, let the user decide what they want to happen
+        if (skipRemote) {
+            return adaptGet(dataInfo, fulfiller::getLocal)
+        }
+
+        var updateFetched = false
+        val returnValue: (String) -> T
+
+        // Interesting bug in the analyser. It's fine with this form of assignment, but when directly
+        // assigning type-coercion fails for some reason
+        @Suppress("LiftReturnOrAssignment")
+        if (fulfiller.existsLocal(dataInfo.key)) {
+            // Check freshness of cached data.
+            // Last fetched + expiration duration should be after the current time for
+            // data to be considered fresh
+            returnValue = if (dataInfo.lastFetched
+                    .plus(dataInfo.expirationDuration)
+                    .isBefore(LocalDateTime.now())) {
+                updateFetched = true
+                fulfiller::getRemote
+            } else {
+                fulfiller::getLocal
+            }
+        } else {
+            updateFetched = true
+            returnValue = fulfiller::getRemote
+        }
+
+        return adaptGet(dataInfo, returnValue, updateFetched)
+    }
+
+    private fun <T> putTransient(dataInfo: DataInfo, value: T): Single<DataInfo> {
+        return adaptPut(dataInfo, fulfiller::putRemote, value, updatePutTime = true)
+    }
+
+    private fun <T> putPersistent(dataInfo: DataInfo, value: T, skipRemote: Boolean = false): Single<DataInfo> {
+        // If the item is to be put in persistent storage do so, but don't update the update put time.
+        // This is such that when the brokers are synced, this data point will be regarded as required
+        // to be synced.
+        return adaptPut(dataInfo, fulfiller::putLocal, value)
+    }
+}
