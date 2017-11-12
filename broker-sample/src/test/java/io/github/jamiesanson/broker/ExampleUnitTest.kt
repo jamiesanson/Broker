@@ -1,5 +1,6 @@
 package io.github.jamiesanson.broker
 
+import io.github.jamiesanson.broker.annotation.BrokerRepo
 import org.junit.Test
 
 import org.junit.Assert.*
@@ -9,6 +10,7 @@ import org.junit.Assert.*
  *
  * See [testing documentation](http://d.android.com/tools/testing).
  */
+@BrokerRepo
 class ExampleUnitTest {
     @Test
     fun addition_isCorrect() {
