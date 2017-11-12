@@ -10,7 +10,8 @@ import org.joda.time.Duration
 import org.joda.time.LocalDateTime
 
 /**
- * Class for wrapping repository return types.
+ * Class for wrapping repository return types. Should not be
+ * instantiated directly.
  */
 class Broker<T>(
         override val key: String,

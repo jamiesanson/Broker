@@ -1,6 +1,7 @@
 package io.github.jamiesanson.broker
 
-import com.sun.org.apache.xml.internal.security.utils.ElementCheckerImpl
+import io.github.jamiesanson.broker.event.LifecycleEvent
+import io.github.jamiesanson.broker.event.LifecycleEvent.Type.*
 import io.github.jamiesanson.broker.event.SyncEvent
 import io.github.jamiesanson.broker.event.SyncEvent.Type.*
 import io.github.jamiesanson.broker.fulfillment.Fulfiller
@@ -19,8 +20,19 @@ class BrokerRepository(val fulfiller: Fulfiller): Provider<FulfillmentManager> {
         return fulfillmentManager
     }
 
+    /**
+     * Syncs all brokers with remotes if required
+     */
     fun syncAll() {
         EventBus.getDefault().post(SyncEvent(IMMEDIATE))
+    }
+
+    /**
+     * Must be called when repository is being stopped, forcing all brokers to unsubscribe from
+     * EventBus messages
+     */
+    fun onDestroy() {
+        EventBus.getDefault().post(LifecycleEvent(ON_DESTROY))
     }
 
     inner class Builder() {

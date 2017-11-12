@@ -14,6 +14,13 @@ class FulfillmentManager(
         private val fulfiller: Fulfiller
 ) {
 
+    /**
+     * Retrieves value associated with the {@link DataInfo}
+     * instance.
+     *
+     * @param info DataInfo to retrieve
+     * @return Returns a Single of the requested value paired to the new DataInfo
+     */
     fun <T> get(info: DataInfo) : Single<Pair<T, DataInfo>> {
         return when (info.persistenceType) {
             PersistenceType.TRANSIENT -> getTransient(info)
@@ -22,6 +29,14 @@ class FulfillmentManager(
         }
     }
 
+    /**
+     * Updates value associated with the {@link DataInfo}
+     * instance.
+     *
+     * @param info DataInfo to retrieve
+     * @param value Value to update
+     * @return Returns a Single of the new DataInfo when complete
+     */
     fun <T> put(info: DataInfo, value: T): Single<DataInfo> {
         return when (info.persistenceType) {
             PersistenceType.TRANSIENT -> putTransient(info, value)
@@ -52,7 +67,6 @@ class FulfillmentManager(
     /**
      * Helper function for adapting put calls
      */
-
     private fun <T> adaptPut(info: DataInfo,
                              callable: (String, T) -> Unit,
                              value: T,
