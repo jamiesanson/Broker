@@ -108,7 +108,6 @@ class Broker<T>(
     @Subscribe
     fun sync(event: SyncEvent) {
         if (event.syncType == SyncEvent.Type.IMMEDIATE) {
-            lastUpdated
             get()
                 .flatMapCompletable {
                     put(it)
@@ -132,4 +131,5 @@ class Broker<T>(
             val onComplete: () -> Unit,
             val onError: (throwable: Throwable) -> Unit = {}
     )
+
 }

@@ -1,11 +1,20 @@
 package io.github.jamiesanson.broker.repo
 
 import io.github.jamiesanson.broker.annotation.BrokerRepo
+import io.github.jamiesanson.broker.annotation.ExpireDuration
+import io.github.jamiesanson.broker.annotation.Persistent
+import io.github.jamiesanson.broker.annotation.Transient
 import io.github.jamiesanson.broker.fulfillment.Broker
+import io.github.jamiesanson.broker.fulfillment.PersistenceType
 
 @BrokerRepo
-class TestRepo {
+interface TestRepo {
 
-    @Transient
-    lateinit var meme: Broker<String>
+    @Transient(key = "MEME")
+    fun transientTestString(): Broker<String>
+
+    @Persistent(
+            key = "TEST",
+            cacheExpireDuration = ExpireDuration.FIVE_MINUTES)
+    fun persistentTestInt(): Broker<Int>
 }
