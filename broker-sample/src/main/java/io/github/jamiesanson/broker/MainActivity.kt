@@ -4,7 +4,6 @@ import android.os.Bundle
 import android.support.v7.app.AppCompatActivity
 import android.widget.Toast
 import io.github.jamiesanson.broker.compiler.BrokerTestRepo
-import io.github.jamiesanson.broker.fulfillment.Broker
 import io.github.jamiesanson.broker.repo.TestRepo
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.schedulers.Schedulers
@@ -14,18 +13,14 @@ class MainActivity: AppCompatActivity() {
 
     // TODO make this injectable, and not have to reference generated class
     lateinit var repo: TestRepo
-    lateinit var transientBroker: Broker<String>
-    lateinit var persistentBroker: Broker<Int>
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.main_activity)
         repo = BrokerTestRepo(application as BrokerSampleApp)
-        transientBroker = repo.transientTestString()
-        persistentBroker = repo.persistentTestInt()
 
         transientButton.setOnClickListener {
-            transientBroker.get()
+            repo.transientTestString().get()
                     .subscribeOn(Schedulers.io())
                     .observeOn(AndroidSchedulers.mainThread())
                     .subscribe { string ->
@@ -34,7 +29,7 @@ class MainActivity: AppCompatActivity() {
         }
 
         persistentButton.setOnClickListener {
-            persistentBroker.get()
+            repo.persistentTestInt().get()
                     .subscribeOn(Schedulers.io())
                     .observeOn(AndroidSchedulers.mainThread())
                     .subscribe { int ->

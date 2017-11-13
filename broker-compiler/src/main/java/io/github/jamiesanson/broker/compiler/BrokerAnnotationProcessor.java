@@ -3,6 +3,8 @@ package io.github.jamiesanson.broker.compiler;
 import com.google.auto.service.AutoService;
 import com.squareup.javapoet.JavaFile;
 
+import org.jetbrains.annotations.NotNull;
+
 import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
@@ -26,17 +28,20 @@ import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.util.ElementFilter;
-import javax.lang.model.util.Elements;
-import javax.lang.model.util.Types;
 import javax.tools.Diagnostic;
 
 import io.github.jamiesanson.broker.annotation.BrokerRepo;
 import io.github.jamiesanson.broker.annotation.Persistent;
 import io.github.jamiesanson.broker.annotation.Transient;
 import io.github.jamiesanson.broker.compiler.model.RepositoryModel;
+import io.github.jamiesanson.broker.compiler.util.Logger;
 
+/**
+ * Main Annotation Processor for Broker. Captures {@link BrokerRepo}
+ * annotated classes and inspects those for annotated methods
+ */
 @AutoService(Processor.class)
-public class BrokerAnnotationProcessor extends AbstractProcessor {
+public class BrokerAnnotationProcessor extends AbstractProcessor implements Logger {
 
     private static final List<Class<? extends Annotation>> BROKER_TYPES = Collections.singletonList(
             BrokerRepo.class);
@@ -47,16 +52,12 @@ public class BrokerAnnotationProcessor extends AbstractProcessor {
     );
 
     private Messager messager;
-    private Types typesUtil;
-    private Elements elementsUtil;
     private Filer filer;
 
     @Override
     public synchronized void init(ProcessingEnvironment processingEnv) {
         super.init(processingEnv);
         messager = processingEnv.getMessager();
-        typesUtil = processingEnv.getTypeUtils();
-        elementsUtil = processingEnv.getElementUtils();
         filer = processingEnv.getFiler();
     }
 
@@ -98,22 +99,17 @@ public class BrokerAnnotationProcessor extends AbstractProcessor {
                 }
             }
 
-            repositoryModels.add(new RepositoryModel(repoElement, methodElements, messager));
+            repositoryModels.add(new RepositoryModel(repoElement, methodElements, this));
         }
 
         if (!repositoryModels.isEmpty()) {
-            warn("Processing " + repositoryModels.size() + " repositories");
-            int methodCount = 0;
+            log("Processing " + repositoryModels.size() + " repositories");
             for (RepositoryModel model : repositoryModels) {
-                methodCount += model.getMembers().size();
-
                 processRepoModel(model);
             }
-
-            warn("Total methods annotated: " + methodCount);
         }
 
-        return false;
+        return true;
     }
 
     private void processRepoModel(RepositoryModel model) {
@@ -152,18 +148,18 @@ public class BrokerAnnotationProcessor extends AbstractProcessor {
         return supportedAnnotationsFound == 1;
     }
 
-    @SuppressWarnings("SameParameterValue")
-    private void error(String error) {
+    @Override
+    public void error(@NotNull String error) {
         messager.printMessage(Diagnostic.Kind.ERROR, "[BROKER]: " + error);
     }
 
-    @SuppressWarnings("SameParameterValue")
-    private void warn(String warning) {
+    @Override
+    public void warn(@NotNull String warning) {
         messager.printMessage(Diagnostic.Kind.WARNING, "[BROKER]: " + warning);
     }
 
-    @SuppressWarnings("SameParameterValue")
-    private void log(String log) {
+    @Override
+    public void log(@NotNull String log) {
         messager.printMessage(Diagnostic.Kind.NOTE, "[BROKER]: " + log);
     }
 }

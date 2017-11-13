@@ -12,7 +12,7 @@ import org.greenrobot.eventbus.EventBus
 /**
  * Class to be initialised at the start of the application
  */
-class BrokerRepository(val fulfiller: Fulfiller): Provider<FulfillmentManager> {
+class BrokerRepositoryManager(val fulfiller: Fulfiller): Provider<FulfillmentManager> {
 
     private val fulfillmentManager = FulfillmentManager(fulfiller)
 
@@ -43,8 +43,8 @@ class BrokerRepository(val fulfiller: Fulfiller): Provider<FulfillmentManager> {
             return this
         }
 
-        fun build(): BrokerRepository {
-            return BrokerRepository(
+        fun build(): BrokerRepositoryManager {
+            return BrokerRepositoryManager(
                     fulfiller = this.fulfiller
             )
         }
