@@ -94,6 +94,7 @@ I plan on beginning versioning starting at `0.1.0` after I've implemented the fo
  * Some way of not having to hardcode strings as keys
  * Tidy up async APIs
  * A nicer way of getting repository instances that doesn't require reflection and hardcoded packages
+ * Add tests
  * Artifact publishing
  * Continuous integration
  
