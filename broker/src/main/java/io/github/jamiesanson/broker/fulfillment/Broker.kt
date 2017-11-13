@@ -98,6 +98,7 @@ class Broker<T>(
      */
     private fun updateInfo(info: DataInfo) {
         lastFetched = info.lastFetched
+        lastUpdated = info.lastUpdated
     }
 
     /**
