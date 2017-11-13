@@ -22,6 +22,11 @@ interface CatRepository {
         key = "cat_list"
     )
     fun catList(): Broker<List<Cat>>
+    
+    @Transient(
+        key = "internet_cat"
+    )
+    fun internetCats(): Broker<List<Cat>>
 }
 ```
 Before project compilation, Broker looks for these annotations and generates an implementation of `CatRepository`. To then use the 
@@ -68,8 +73,14 @@ backing that data will know where to look based off if the field is marked as `T
 // First get an instance of the CatRepository
 val catRepo = repoManager.get(CatRepository::class.java)
 
-// Get the list
+// Get the list. Gets the remote the first time and puts it into local storage
+// Subsequent calls gets from the local storage if it hasn't been there for too long
 catRepo.catList().get()
+      .subscribeOn(Schedulers.io())
+      .subscribe(...)
+      
+// Transient data. Always gets from the internet
+catRepo.internetCats().get()
       .subscribeOn(Schedulers.io())
       .subscribe(...)
 ```
@@ -81,19 +92,26 @@ changes as I commit more.
 ### Where's the version number?
 I plan on beginning versioning starting at `0.1.0` after I've implemented the following:
  * Some way of not having to hardcode strings as keys
+ * Tidy up async APIs
  * A nicer way of getting repository instances that doesn't require reflection and hardcoded packages
  * Artifact publishing
  * Continuous integration
  
 After these are implemented I'll begin proper usage of the pull request/review system, as well as tagging and publishing artifacts such that they're usable without needing to fork this repo.
+
+### What's been done
+* Annotation processing
+* Codegen with JavaPoet
+* Repo caching 
+* Logic based on what's given in the annotations
  
-### Plans before v1
+### Plans before 1.0.0
 Following up on the previous paragraph, the _tentative_ roadmap for Broker is:
-##### Release 0.2.0:
+#### Release 0.2.0:
   * Have different fulfillers doing different things, i.e a remote fulfiller, a local fulfiller, maybe a cache fulfiller etc.
-##### Release 0.3.0:
+#### Release 0.3.0:
   * Tidy up dependencies and implement time without the use of Joda
-##### Release 0.4.0:
+#### Release 0.4.0:
   * Add plugin to configure how Broker builds and processes
-##### Release 0.5.0:
+#### Release 0.5.0:
   * I'm sure something else will come up
