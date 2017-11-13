@@ -1,11 +1,11 @@
 package io.github.jamiesanson.broker.compiler.model
 
 import com.squareup.javapoet.*
-import io.github.jamiesanson.broker.annotation.ExpireDuration
 import io.github.jamiesanson.broker.annotation.Persistent
 import io.github.jamiesanson.broker.annotation.Transient
 import io.github.jamiesanson.broker.compiler.util.Logger
 import io.github.jamiesanson.broker.fulfillment.PersistenceType
+import io.github.jamiesanson.broker.util.ExpireDuration
 import org.joda.time.LocalDateTime
 import javax.lang.model.element.ExecutableElement
 import javax.lang.model.element.Modifier

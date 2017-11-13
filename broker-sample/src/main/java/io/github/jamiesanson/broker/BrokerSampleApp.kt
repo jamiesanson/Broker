@@ -4,13 +4,14 @@ import android.app.Application
 import android.content.Context
 import android.util.Log
 import io.github.jamiesanson.broker.fulfillment.Fulfiller
-import io.github.jamiesanson.broker.fulfillment.FulfillmentManager
-import io.github.jamiesanson.broker.fulfillment.Provider
 
-class BrokerSampleApp: Application(), Provider<FulfillmentManager> {
+class BrokerSampleApp: Application() {
 
-    override fun get(): FulfillmentManager {
-        return FulfillmentManager(SampleFulfiller(this))
+    lateinit var repoManager: BrokerRepositoryManager
+
+    override fun onCreate() {
+        super.onCreate()
+        repoManager = BrokerRepositoryManager(SampleFulfiller(this))
     }
 
     @Suppress("UNCHECKED_CAST")
