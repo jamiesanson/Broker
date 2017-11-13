@@ -24,11 +24,13 @@ class MethodModel(
      * are get method spec, private field spec, and codeblock
      * for constructor initialization
      */
-    fun generateSpec(): Triple<MethodSpec, FieldSpec, CodeBlock> {
+    fun generateSpec(makeLogs: Boolean): Triple<MethodSpec, FieldSpec, CodeBlock> {
         val returnClass = ParameterizedTypeName.get(member.returnType)
         val memberName = "${member.simpleName}Broker"
 
-        logger.log("Generating specs for $returnClass")
+        if (makeLogs) {
+            logger.log("Generating specs for $returnClass")
+        }
 
         // Generate Field
         val field = FieldSpec.builder(returnClass, memberName)

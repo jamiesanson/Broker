@@ -16,6 +16,8 @@ class BrokerRepositoryManager(val fulfiller: Fulfiller): Provider<FulfillmentMan
 
     private val fulfillmentManager = FulfillmentManager(fulfiller)
 
+    //private val resolver: RepoResolver = BrokerRepoResolver()
+
     override fun get(): FulfillmentManager {
         return fulfillmentManager
     }

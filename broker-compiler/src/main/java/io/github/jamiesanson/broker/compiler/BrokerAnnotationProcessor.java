@@ -34,6 +34,7 @@ import io.github.jamiesanson.broker.annotation.BrokerRepo;
 import io.github.jamiesanson.broker.annotation.Persistent;
 import io.github.jamiesanson.broker.annotation.Transient;
 import io.github.jamiesanson.broker.compiler.model.RepositoryModel;
+import io.github.jamiesanson.broker.compiler.model.ResolverModel;
 import io.github.jamiesanson.broker.compiler.util.Logger;
 
 /**
@@ -93,9 +94,9 @@ public class BrokerAnnotationProcessor extends AbstractProcessor implements Logg
             List<ExecutableElement> methodElements = ElementFilter.methodsIn(allElements);
 
             // Filter elements not annotated with supported annotations
-            for (ExecutableElement meth : methodElements) {
-                if (!isMethodAnnotated(meth)) {
-                    methodElements.remove(meth);
+            for (ExecutableElement method : methodElements) {
+                if (!isMethodAnnotated(method)) {
+                    methodElements.remove(method);
                 }
             }
 
@@ -107,6 +108,8 @@ public class BrokerAnnotationProcessor extends AbstractProcessor implements Logg
             for (RepositoryModel model : repositoryModels) {
                 processRepoModel(model);
             }
+
+            processResolver(repositoryModels);
         }
 
         return true;
@@ -114,7 +117,17 @@ public class BrokerAnnotationProcessor extends AbstractProcessor implements Logg
 
     private void processRepoModel(RepositoryModel model) {
         try {
-            JavaFile.builder(this.getClass().getPackage().getName(), model.generateSpec().build())
+            JavaFile.builder(this.getClass().getPackage().getName(), model.generateSpec(true).build())
+                    .build()
+                    .writeTo(filer);
+        } catch (IOException e) {
+            error(e.getMessage());
+        }
+    }
+
+    private void processResolver(List<RepositoryModel> models) {
+        try {
+            JavaFile.builder(this.getClass().getPackage().getName(), new ResolverModel(models, this).generateSpec().build())
                     .build()
                     .writeTo(filer);
         } catch (IOException e) {

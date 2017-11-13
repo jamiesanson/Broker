@@ -15,12 +15,14 @@ import io.github.jamiesanson.broker.fulfillment.Provider
  */
 data class RepositoryModel(
         private val repositoryElement: TypeElement,
-        private val members: List<ExecutableElement>,
+        val members: List<ExecutableElement>,
         private val logger: Logger
 ) {
 
-    fun generateSpec(): TypeSpec.Builder {
-        logger.log("Generating class: \"Broker${repositoryElement.simpleName}\"")
+    fun generateSpec(makeLogs: Boolean = true): TypeSpec.Builder {
+        if (makeLogs) {
+            logger.log("Generating class: \"Broker${repositoryElement.simpleName}\"")
+        }
 
         // Create the repo class builder
         val repoSpec = TypeSpec.classBuilder("Broker${repositoryElement.simpleName}")
@@ -47,14 +49,16 @@ data class RepositoryModel(
         // Add methods for each member
         for (member in members) {
             val methodModel = MethodModel(member, logger)
-            val (method, field, initializer) = methodModel.generateSpec()
+            val (method, field, initializer) = methodModel.generateSpec(makeLogs)
 
             repoSpec.addMethod(method)
             repoSpec.addField(field)
             constructor.addCode(initializer)
         }
 
-        logger.log("Added ${members.size} members to \"Broker${repositoryElement.simpleName}\"")
+        if (makeLogs) {
+            logger.log("Added ${members.size} members to \"Broker${repositoryElement.simpleName}\"")
+        }
 
         repoSpec.addMethod(constructor.build())
         return repoSpec
