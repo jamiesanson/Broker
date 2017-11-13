@@ -62,14 +62,12 @@ class ResolverModel(
                 .addTypeVariable(typedVar)
                 .addParameter(ParameterizedTypeName.get(ClassName.get(Class::class.java), typedVar), parameterName)
                 .beginControlFlow("for (\$T \$L: \$N)", Object::class.java, tempParamName, field)
-                .addCode("try {\n")
-                .addStatement("\t\$T temp = (\$T) \$L", typedVar, typedVar, tempParamName)
-                .addStatement("\treturn temp")
-                .addCode("} catch (\$T \$L) {\n", ClassCastException::class.java, "e")
-                .addStatement("\tcontinue")
-                .addCode("}\n")
+                .beginControlFlow("if (\$L.isAssignableFrom(\$L.getClass()))", parameterName, tempParamName)
+                .addStatement("return (\$T) \$L", typedVar, tempParamName)
                 .endControlFlow()
-                .addStatement("return null")
+                .endControlFlow()
+                .addStatement("throw new IllegalArgumentException(\"The implementation of \" +\$L.getSimpleName() + \" was not found. " +
+                        "Make sure Broker\" + \$L.getSimpleName() + \" generated properly\")", parameterName, parameterName)
 
         return spec.build()
     }

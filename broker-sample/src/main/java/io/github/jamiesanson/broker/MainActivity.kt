@@ -35,6 +35,12 @@ class MainActivity: AppCompatActivity() {
                         Toast.makeText(this, int.toString(), Toast.LENGTH_LONG).show()
                     }
         }
+
+        try {
+            (application as BrokerSampleApp).repoManager.getRepo(MainActivity::class.java)
+        } catch (e: IllegalArgumentException) {
+            e.printStackTrace()
+        }
     }
 
 }

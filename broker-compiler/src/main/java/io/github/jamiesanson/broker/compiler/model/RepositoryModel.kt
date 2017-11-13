@@ -15,7 +15,7 @@ import io.github.jamiesanson.broker.fulfillment.Provider
  */
 data class RepositoryModel(
         private val repositoryElement: TypeElement,
-        val members: List<ExecutableElement>,
+        private val members: List<ExecutableElement>,
         private val logger: Logger
 ) {
 
