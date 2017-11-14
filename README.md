@@ -89,6 +89,9 @@ catRepo.internetCats().get()
 Broker is current under _*heavy development*_, that means if you want to use it, fork the repo and be sure to keep up to date with 
 changes as I commit more.
 
+The sample will be updated as I make changes to the core of the library. This sample uses an [open-source REST API for Space X 
+information](https://github.com/r-spacex/SpaceX-API) to demonstrate how this library can be used.
+
 ### Where's the version number?
 I plan on beginning versioning starting at `0.1.0` after I've implemented the following:
  * Some way of not having to hardcode strings as keys
