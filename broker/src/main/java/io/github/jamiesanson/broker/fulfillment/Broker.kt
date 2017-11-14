@@ -2,7 +2,6 @@ package io.github.jamiesanson.broker.fulfillment
 
 import io.github.jamiesanson.broker.event.SyncEvent
 import io.reactivex.Completable
-import io.reactivex.Scheduler
 import io.reactivex.Single
 import io.reactivex.schedulers.Schedulers
 import org.greenrobot.eventbus.EventBus
@@ -25,6 +24,9 @@ class Broker<T>(
 
     init {
         EventBus.getDefault().register(this)
+
+        // TODO Retrieve fetched and updated values from cache asynchronously
+
     }
 
     /**
@@ -87,6 +89,20 @@ class Broker<T>(
                 }
                 .subscribeOn(Schedulers.io())
                 .subscribe()
+        }
+    }
+
+    /**
+     * Class for storing information in a disk backed LRU cache
+     * relating to this broker
+     */
+    data class CacheValues(
+            val lastFetched: LocalDateTime,
+            var lastUpdated: LocalDateTime
+    ) {
+        companion object {
+            val lastFetchedIndex = 0
+            val lastUpdatedIndex = 1
         }
     }
 }

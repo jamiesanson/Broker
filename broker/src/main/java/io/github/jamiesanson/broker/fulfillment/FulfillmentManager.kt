@@ -3,6 +3,7 @@ package io.github.jamiesanson.broker.fulfillment
 import io.github.jamiesanson.broker.util.isContentStagnant
 import io.reactivex.Completable
 import io.reactivex.Single
+import io.reactivex.SingleOnSubscribe
 import io.reactivex.SingleSource
 import org.joda.time.LocalDateTime
 
@@ -53,9 +54,10 @@ class FulfillmentManager(
                              updateFetched: Boolean = false): Single<Pair<T, DataInfo>> {
 
         return Single
-                .fromCallable{
-                    return@fromCallable callable(info.key)
-                }
+                .create( SingleOnSubscribe<T> { emitter ->
+                    val result = callable(info.key)
+                    emitter.onSuccess(result)
+                })
                 .map {
                     if (updateFetched) {
                         info.lastFetched = LocalDateTime.now()
@@ -71,9 +73,9 @@ class FulfillmentManager(
                              callable: (String, T) -> Unit,
                              value: T,
                              updatePutTime: Boolean = false): Single<DataInfo> {
-        return Completable
-                .fromCallable{
-                    return@fromCallable callable(info.key, value)
+        return Completable.create {
+                    callable(info.key, value)
+                    it.onComplete()
                 }
                 .andThen( SingleSource {
                     if (updatePutTime) {
@@ -82,6 +84,12 @@ class FulfillmentManager(
 
                     it.onSuccess(info)
                 })
+    }
+
+    private fun <T> getRemoteAndUpdateLocal(key: String): T {
+        val item: T = fulfiller.getRemote(key)
+        fulfiller.putLocal(key, item)
+        return item
     }
 
     private fun <T> getTransient(info: DataInfo): Single<Pair<T, DataInfo>> {
@@ -104,13 +112,13 @@ class FulfillmentManager(
             // Check freshness of cached data.
             returnValue = if (dataInfo.isContentStagnant()) {
                 updateFetched = true
-                fulfiller::getRemote
+                this::getRemoteAndUpdateLocal
             } else {
                 fulfiller::getLocal
             }
         } else {
             updateFetched = true
-            returnValue = fulfiller::getRemote
+            returnValue = this::getRemoteAndUpdateLocal
         }
 
         return adaptGet(dataInfo, returnValue, updateFetched)

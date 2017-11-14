@@ -4,15 +4,15 @@
     android:layout_height="match_parent">
 
     <Button
-        android:id="@+id/transientButton"
+        android:id="@+id/latestLaunchButton"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Get Transient"/>
+        android:text="Get Latest"/>
 
 
     <Button
-        android:id="@+id/persistentButton"
+        android:id="@+id/pastLaunchesButton"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Get Persistent"/>
+        android:text="Get Past Launches"/>
 </LinearLayout>

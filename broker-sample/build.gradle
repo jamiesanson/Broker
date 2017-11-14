@@ -27,8 +27,21 @@ dependencies {
     implementation"org.jetbrains.kotlin:kotlin-stdlib-jre7:$kotlin_version"
     implementation 'com.android.support:appcompat-v7:26.1.0'
 
+    // Compile the Broker project
     api project(':broker')
     kapt project(':broker-compiler')
+
+    // Retrofit
+    implementation 'com.squareup.retrofit2:retrofit:2.3.0'
+    implementation 'com.squareup.retrofit2:converter-gson:2.3.0'
+    implementation 'com.squareup.retrofit2:adapter-rxjava2:2.3.0'
+
+    // Dagger
+    implementation 'com.google.dagger:dagger:2.11'
+    kapt 'com.google.dagger:dagger-compiler:2.11'
+
+    // Paper
+    implementation 'io.paperdb:paperdb:2.6'
 
     //TODO: Remove this somehow
     implementation "joda-time:joda-time:2.9.9"

@@ -2,45 +2,52 @@ package io.github.jamiesanson.broker
 
 import android.os.Bundle
 import android.support.v7.app.AppCompatActivity
-import android.widget.Toast
-import io.github.jamiesanson.broker.repo.TestRepo
+import android.util.Log
+import io.github.jamiesanson.broker.repo.SpaceXRepo
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.schedulers.Schedulers
 import kotlinx.android.synthetic.main.main_activity.*
+import javax.inject.Inject
 
 class MainActivity: AppCompatActivity() {
 
-    // TODO make this injectable, and not have to reference generated class
-    lateinit var repo: TestRepo
+    @Inject
+    lateinit var repo: SpaceXRepo
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.main_activity)
-        repo = (application as BrokerSampleApp).repoManager.getRepo(TestRepo::class.java)
+        (application as BrokerSampleApp).component.inject(this)
 
-        transientButton.setOnClickListener {
-            repo.transientTestString().get()
-                    .subscribeOn(Schedulers.io())
-                    .observeOn(AndroidSchedulers.mainThread())
-                    .subscribe { string ->
-                        Toast.makeText(this, string, Toast.LENGTH_LONG).show()
-                    }
+        latestLaunchButton.setOnClickListener {
+            getLatestLaunch()
         }
 
-        persistentButton.setOnClickListener {
-            repo.persistentTestInt().get()
-                    .subscribeOn(Schedulers.io())
-                    .observeOn(AndroidSchedulers.mainThread())
-                    .subscribe { int ->
-                        Toast.makeText(this, int.toString(), Toast.LENGTH_LONG).show()
-                    }
-        }
-
-        try {
-            (application as BrokerSampleApp).repoManager.getRepo(MainActivity::class.java)
-        } catch (e: IllegalArgumentException) {
-            e.printStackTrace()
+        pastLaunchesButton.setOnClickListener {
+            getPastLaunches()
         }
     }
+
+    private fun getLatestLaunch() {
+        repo.latestLaunch().get()
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe { launch ->
+                    Log.d("MainActivity","Got Latest: $launch")
+
+                }
+    }
+
+    private fun getPastLaunches() {
+        repo.pastLaunches().get()
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe { launch ->
+                    Log.d("MainActivity","Got Past: $launch")
+
+                }
+    }
+
+
 
 }

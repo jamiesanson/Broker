@@ -3,18 +3,21 @@ package io.github.jamiesanson.broker.repo
 import io.github.jamiesanson.broker.annotation.BrokerRepo
 import io.github.jamiesanson.broker.annotation.Persistent
 import io.github.jamiesanson.broker.annotation.Transient
+import io.github.jamiesanson.broker.data.model.Launch
 import io.github.jamiesanson.broker.fulfillment.Broker
-import io.github.jamiesanson.broker.fulfillment.PersistenceType
 import io.github.jamiesanson.broker.util.ExpireDuration
 
 @BrokerRepo
-interface TestRepo {
+interface SpaceXRepo {
 
-    @Transient(key = "MEME")
-    fun transientTestString(): Broker<String>
+    @Transient(key = "latest")
+    fun latestLaunch(): Broker<Launch>
 
     @Persistent(
-            key = "TEST",
+            key = "upcoming",
             cacheExpireDuration = ExpireDuration.FIVE_MINUTES)
-    fun persistentTestInt(): Broker<Int>
+    fun upcomingLaunches(): Broker<List<Launch>>
+
+    @Persistent(key = "past")
+    fun pastLaunches(): Broker<List<Launch>>
 }
