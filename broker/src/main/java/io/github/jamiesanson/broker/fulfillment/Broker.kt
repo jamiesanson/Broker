@@ -2,6 +2,7 @@ package io.github.jamiesanson.broker.fulfillment
 
 import io.github.jamiesanson.broker.event.SyncEvent
 import io.reactivex.Completable
+import io.reactivex.Scheduler
 import io.reactivex.Single
 import io.reactivex.schedulers.Schedulers
 import org.greenrobot.eventbus.EventBus
@@ -27,20 +28,6 @@ class Broker<T>(
     }
 
     /**
-     * Function for getting the value backing this Broker.
-     *
-     * @param callback Callback for async operation
-     */
-    fun get(callback: Callback<T>) {
-        get()
-                .subscribeOn(Schedulers.io())
-                .subscribe(
-                        {item -> callback.onRetrieved(item)},
-                        {error -> callback.onError(error)}
-                )
-    }
-
-    /**
      * Function to getting the value backing this Broker.
      *
      * @return Single to be subscribed to
@@ -54,21 +41,6 @@ class Broker<T>(
                     updateInfo(dataInfo)
                     return@map value
                 }
-    }
-
-    /**
-     * Function to update the state of the data
-     *
-     * @param value Value to be put into the broker
-     * @param callback callback called on completion
-     */
-    fun put(value: T, putCallback: PutCallback) {
-        put(value)
-                .subscribeOn(Schedulers.io())
-                .subscribe(
-                        { putCallback.onComplete() },
-                        { putCallback.onError(it)  }
-                )
     }
 
     /**
@@ -117,20 +89,4 @@ class Broker<T>(
                 .subscribe()
         }
     }
-
-    /**
-     * Callback used for get operations
-     */
-    inner class Callback<in T>(
-            val onRetrieved: (item: T) -> Unit,
-            val onError: (throwable: Throwable) -> Unit = {})
-
-    /**
-     * Callback used for put operations
-     */
-    inner class PutCallback(
-            val onComplete: () -> Unit,
-            val onError: (throwable: Throwable) -> Unit = {}
-    )
-
 }

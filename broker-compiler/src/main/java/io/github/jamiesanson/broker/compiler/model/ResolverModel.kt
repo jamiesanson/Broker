@@ -5,7 +5,6 @@ import io.github.jamiesanson.broker.compiler.util.Logger
 import io.github.jamiesanson.broker.fulfillment.FulfillmentManager
 import io.github.jamiesanson.broker.fulfillment.Provider
 import io.github.jamiesanson.broker.util.RepoResolver
-import java.lang.ClassCastException
 import java.util.ArrayList
 import javax.lang.model.element.Modifier
 
