@@ -1,6 +1,8 @@
 # Broker
 Broker is an Annotation Processing Library for Android Supporting Implementation of the Repository Pattern.
 
+NOTE: This library needs a lot of work. From the time I started building this until now my opinions and technical knowledge have changed. I plan on revisiting this library in the future for other projects.
+
 ## What is The Repository Pattern?
 The repository pattern is a pattern allowing the seperation of concerns when retrieving data. The following diagram taken from [Microsofts
 Design Pattern Wiki](https://msdn.microsoft.com/en-us/library/ff649690.aspx?f=255&MSPPError=-2147217396) describes it pretty nicely.
