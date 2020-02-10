@@ -102,7 +102,7 @@ I plan on beginning versioning starting at `0.1.0` after I've implemented the fo
  * Add tests
  * Get rid of Joda (Was added to make things easy, but the memory footprint and classpath resource access is very inefficient)
  * Artifact publishing
- * Continuous integration
+ * Continuous integration.
  
 After these are implemented I'll begin proper usage of the pull request/review system, as well as tagging and publishing artifacts such that they're usable without needing to fork this repo.
 
